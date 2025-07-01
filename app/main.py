@@ -9,4 +9,4 @@ app.include_router(routes_user.router)
 
 @app.get("/")
 async def root():
-    return {"message": "FastChat backend is running"}
+    return {"message": "Chat Rio backend is running"}
