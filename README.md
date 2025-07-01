@@ -27,7 +27,7 @@ pip install -r requirements.txt
 5. **Chạy ứng dụng**:
 
 ```bash
-python main.py
+python run.py
 ```
 
 6. **Biến môi trường**:
