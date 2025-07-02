@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>FastChat WebSocket Test</title>
+</head>
+<body>
+  <h2>💬 FastChat Realtime Test</h2>
+
+  <label>🆔 Your User ID:</label><br />
+  <input type="text" id="userId" placeholder="user_a" /><br /><br />
+
+  <label>🔑 JWT Token:</label><br />
+  <input type="text" id="token" placeholder="paste your token here" /><br /><br />
+
+  <label>🎯 Chatting with (User ID):</label><br />
+  <input type="text" id="targetId" placeholder="user_b" /><br /><br />
+
+  <label>✏️ Message:</label><br />
+  <input type="text" id="message" placeholder="Type a message..." />
+  <button onclick="sendMessage()">Send</button>
+  <button onclick="markSeen()">Mark Seen</button>
+
+  <hr />
+  <div>
+    <h4>📨 Messages:</h4>
+    <ul id="messages"></ul>
+    <div id="typingStatus" style="color: gray;"></div>
+  </div>
+
+  <script>
+    let socket = null;
+    let reconnectTimeout = null;
+    let typingTimeout = null;
+
+    function initSocket() {
+      const userId = document.getElementById("userId").value;
+      const token = document.getElementById("token").value;
+      if (!userId || !token) return;
+
+      if (socket) socket.close();
+
+      socket = new WebSocket(`ws://localhost:8000/ws/${userId}?token=${token}`);
+
+      socket.onopen = () => {
+        logMessage(`✅ Connected as ${userId}`);
+      };
+
+      socket.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+
+        if (data.event === "message") {
+          logMessage(`💬 ${data.from} → ${data.to}: ${data.content}`);
+        } else if (data.event === "typing") {
+          if (data.typing) {
+            document.getElementById("typingStatus").textContent = `📝 ${data.from} is typing...`;
+          } else {
+            document.getElementById("typingStatus").textContent = "";
+          }
+        } else if (data.event === "seen") {
+          logMessage(`👁 Seen by ${data.from} at ${data.timestamp}`);
+        }
+      };
+
+      socket.onclose = () => {
+        logMessage("❌ Disconnected. Reconnecting in 3s...");
+        reconnectTimeout = setTimeout(initSocket, 3000);
+      };
+
+      socket.onerror = (e) => {
+        console.error("WebSocket error:", e);
+        socket.close();
+      };
+    }
+
+    function sendMessage() {
+      const to = document.getElementById("targetId").value;
+      const content = document.getElementById("message").value;
+      if (!to || !content || !socket || socket.readyState !== WebSocket.OPEN) return;
+
+      socket.send(JSON.stringify({
+        event: "message",
+        to,
+        content
+      }));
+
+      document.getElementById("message").value = "";
+    }
+
+    function markSeen() {
+      const to = document.getElementById("targetId").value;
+      if (!to || !socket || socket.readyState !== WebSocket.OPEN) return;
+
+      socket.send(JSON.stringify({
+        event: "seen",
+        to
+      }));
+    }
+
+    function handleTyping() {
+      const to = document.getElementById("targetId").value;
+      if (!to || !socket || socket.readyState !== WebSocket.OPEN) return;
+
+      socket.send(JSON.stringify({
+        event: "typing",
+        to,
+        typing: true
+      }));
+
+      if (typingTimeout) clearTimeout(typingTimeout);
+      typingTimeout = setTimeout(() => {
+        socket.send(JSON.stringify({
+          event: "typing",
+          to,
+          typing: false
+        }));
+      }, 2000);
+    }
+
+    function logMessage(msg) {
+      const li = document.createElement("li");
+      li.innerHTML = msg;
+      document.getElementById("messages").appendChild(li);
+    }
+
+    document.getElementById("message").addEventListener("input", handleTyping);
+    document.getElementById("userId").addEventListener("change", initSocket);
+    document.getElementById("token").addEventListener("change", initSocket);
+  </script>
+</body>
+</html>
