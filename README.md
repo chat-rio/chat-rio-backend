@@ -1,5 +1,45 @@
 # Hướng Dẫn Cài Đặt và Chạy Backend FastAPI
 
+```mermaid
+sequenceDiagram
+    participant Client
+    participant FastAPI
+    participant MongoDB
+    participant Redis
+    participant WebSocket
+    participant Manager
+
+    Client->>FastAPI: POST /register /login
+    FastAPI-->>MongoDB: Tạo / Xác thực user
+    FastAPI-->>Client: Trả JWT Token
+
+    Client->>WebSocket: Connect ws://.../ws/{user_id}?token=...
+    WebSocket->>FastAPI: websocket_endpoint()
+    FastAPI->>FastAPI: verify_token()
+    FastAPI->>Manager: connect(user_id, websocket)
+    Manager-->>WebSocket: Accept()
+
+    loop Receive WS event
+        Client->>FastAPI: {event: "message", to, content}
+        FastAPI->>MongoDB: Lưu message vào collection A_B
+        FastAPI->>Redis: publish_message(payload)
+        FastAPI->>Manager: Gửi lại cho người gửi
+
+        Redis-->>FastAPI: redis_subscriber lắng nghe
+        FastAPI->>Manager: Gửi message cho người nhận
+
+        Client->>FastAPI: {event: "typing", to}
+        FastAPI->>Redis: publish_message(typing)
+
+        Client->>FastAPI: {event: "seen", to}
+        FastAPI->>MongoDB: Update seen messages
+        FastAPI->>Redis: publish_message(seen)
+    end
+
+    WebSocket-->>Manager: disconnect(user_id) (on error/close)
+
+```
+
 1. **Cài đặt môi trường ảo env**:
 
 ```bash
