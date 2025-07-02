@@ -8,3 +8,4 @@ redis
 aioredis
 python-jose[cryptography]
 passlib[bcrypt]
+redis[asyncio]
