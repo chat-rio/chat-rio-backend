@@ -6,7 +6,7 @@ from app.websocket.connection_manager import manager
 CHANNEL_NAME = "chat_messages"
 
 async def publish_message(message: dict):
-    print("🚀 Publishing message:", message)  # 👈 thêm dòng này
+    print("🚀 Publishing message:", message)
     if redis_core.redis is None:
         print("❌ Redis is not initialized")
         return
@@ -18,11 +18,11 @@ async def redis_subscriber():
     print("✅ Subscribed to Redis channel:", CHANNEL_NAME)
 
     async for message in pubsub.listen():
-        print("🔔 Redis received:", message)  # 👈 thêm dòng này
+        print("🔔 Redis received:", message)
 
         if message["type"] == "message":
             data = json.loads(message["data"])
-            print("📨 Redis parsed data:", data)  # 👈 thêm dòng này
+            print("📨 Redis parsed data:", data)
             to_user = data.get("to")
             if to_user:
                 await manager.send_personal_message(to_user, data)

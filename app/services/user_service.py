@@ -13,7 +13,7 @@ async def get_user_by_username(username: str):
 async def create_user(user: UserCreate):
     existing = await get_user_by_username(user.username)
     if existing:
-        return None  # hoặc raise HTTPException
+        return None
 
     user_dict = {
         "username": user.username,
