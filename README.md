@@ -36,4 +36,6 @@ python run.py
 | ------------------------ | --------------------- | ----------------------------------- |
 | SECRET_KEY        | your_super_secret_key | secret key |
 | MONGO_URI    | mongodb://localhost:27017/ | Url mongodb                     |
-| MONGO_DB | __________| mongodb name |
+| MONGO_DB | __________| mongodb name | 
+|ALGORITHM | __________ | Thuật toán đối xứng jwt|
+|REDIS_URL| redis://localhost:6379| redis |
